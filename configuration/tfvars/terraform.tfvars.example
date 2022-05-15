@@ -1,0 +1,19 @@
+clustername = "ocp4"
+base_domain = "asimov.lab"
+cidr_block  = "10.0.0.0/16"
+#aws_access_key_id="NEEDS_TO_BE_EXPORTED"
+#aws_secret_access_key="NEEDS_TO_BE_EXPORTED"
+
+# AMI for Bastion Host (RHEL8 in eu-west-1 in this case)
+aws_ami                   = "ami-06ec8443c2a35b0ba"
+aws_bastion_instance_type = "t2.medium"
+aws_ssh_key               = "ssh-rsa AAA"
+aws_extra_tags = {
+  "owner" = "rcarrata"
+}
+aws_azs = [
+  "eu-central-1a",
+  "eu-central-1b",
+  "eu-central-1c"
+]
+aws_region = "eu-central-1"
