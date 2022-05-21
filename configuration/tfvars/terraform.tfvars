@@ -8,14 +8,4 @@ master_cidr_block = "10.0.0.0/17"
 
 worker_cidr_block = "10.0.128.0/17"
 
-
-gcp_extra_tags = {
-  "owner" = "mobb-team"
-}
-gcp_azs = [
-  "us-west-1a",
-  "us-west-1b",
-  "us-west-1c"
-]
-
-gcp_region = "us-west-1"
+gcp_region = "us-west1"

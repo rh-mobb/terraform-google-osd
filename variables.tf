@@ -14,9 +14,25 @@ variable "vpc_routing_mode" {
 }
 
 variable "clustername" {
-  type = string
-
+  type        = string
   description = "The name of the cluster."
 
 }
 
+variable "master_cidr_block" {
+  type        = string
+  description = <<EOF
+The IP address space from which to assign machine IPs.
+Default "10.0.0.0/17"
+EOF
+  default     = "10.0.0.0/17"
+}
+
+variable "worker_cidr_block" {
+  type        = string
+  description = <<EOF
+The IP address space from which to assign machine IPs.
+Default "10.0.128.0/17"
+EOF
+  default     = "10.0.128.0/17"
+}
