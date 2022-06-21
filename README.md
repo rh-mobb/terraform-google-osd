@@ -18,6 +18,6 @@ make all
 
 * Follow the [OSD in GCP install link](https://docs.openshift.com/dedicated/osd_install_access_delete_cluster/creating-a-gcp-cluster.html#osd-create-gcp-cluster-ccs_osd-creating-a-cluster-on-gcp)
 
-## OSD in GCP in Private Mode 
+## OSD in GCP in Private Mode
 
 * WIP
