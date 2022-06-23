@@ -40,7 +40,7 @@ resource "google_compute_instance" "bastion" {
     oc completion bash > oc_bash_completion
     sudo cp oc_bash_completion /etc/bash_completion.d/
     now=$(date)
-    echo "Finished at $now" >> /home/$USER/post-install-osd.txt
+    echo "Finished at $now" >> /tmp/post-install-osd.txt
     EOF
   }
 

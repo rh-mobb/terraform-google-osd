@@ -14,9 +14,9 @@ gcp_region = "us-west1"
 
 gcp_zone = "us-west1-a"
 
-enable_osd_gcp_bastion = true
+enable_osd_gcp_bastion = false
 
-osd_gcp_private = true
+osd_gcp_private = false
 
 bastion_machine_type = "e2-small"
 
