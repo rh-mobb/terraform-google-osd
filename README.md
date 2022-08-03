@@ -2,6 +2,18 @@
 
 Automation Code for deploy and manage OpenShift Dedicated in GCP in Pre-Existing VPCs & Private Mode
 
+### Useful notes before you start
+
+* Follow the guide [here](https://docs.openshift.com/dedicated/osd_install_access_delete_cluster/creating-a-gcp-cluster.html#osd-create-gcp-cluster-ccs_osd-creating-a-cluster-on-gcp) to set up your GCP service account
+* Export the location of your json file using: `export GOOGLE_APPLICATION_CREDENTIALS=$PATH_TO_JSON_FILE`
+
+
+* Note: if your ssh key is not `~/.ssh/id_rsa.pub`, set this using:
+
+```bash
+export TF_VAR_bastion_key_loc=$PATH_TO_PUBLIC_KEY
+```
+
 ## OSD in GCP in Pre-Existing VPCs / Subnets
 
 <img align="center" width="750" src="assets/osd-prereqs.png">
