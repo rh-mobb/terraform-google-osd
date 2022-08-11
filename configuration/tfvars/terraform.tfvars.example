@@ -1,7 +1,5 @@
 gcp_project = "mobb-demo"
 
-clustername = "mobb-osd"
-
 vpc_routing_mode = "REGIONAL"
 
 master_cidr_block = "10.0.0.0/17"
