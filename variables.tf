@@ -80,3 +80,9 @@ variable "bastion_key_loc" {
   default     = "~/.ssh/id_rsa.pub"
   description = "Public key for bastion host"
 }
+
+variable "gcp_sa_file_loc" {
+  type        = string
+  default     = "~/.ssh/id_rsa_sa.json"
+  description = "Path to private json for OSD on GCP Admin Service Account"
+}
