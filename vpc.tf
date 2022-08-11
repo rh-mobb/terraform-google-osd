@@ -27,7 +27,6 @@ resource "google_compute_router" "router" {
   name    = "${var.clustername}-router"
   region  = var.gcp_region
   network = google_compute_network.vpc_network.id
-
 }
 
 resource "google_compute_router_nat" "nat-master" {
@@ -42,7 +41,6 @@ resource "google_compute_router_nat" "nat-master" {
   }
   min_ports_per_vm                    = "7168"
   enable_endpoint_independent_mapping = false
-
 }
 
 resource "google_compute_router_nat" "nat-worker" {
@@ -57,5 +55,4 @@ resource "google_compute_router_nat" "nat-worker" {
   }
   min_ports_per_vm                    = "4096"
   enable_endpoint_independent_mapping = false
-
 }
