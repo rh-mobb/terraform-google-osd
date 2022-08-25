@@ -1,6 +1,6 @@
 gcp_project = "mobb-demo"
 
-clustername = "andyr-osd"
+clustername = "mobb-osd"
 
 vpc_routing_mode = "REGIONAL"
 
