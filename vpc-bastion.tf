@@ -17,6 +17,7 @@ resource "google_compute_subnetwork" "vpc_subnetwork_bastion" {
 
 # TODO Peerings and SSH
 resource "google_compute_network_peering" "peering_osd_to_bastion" {
+  count                               = var.osd_gcp_private ? 1 : 0
   name                                = "${var.clustername}-peering-osd-to-bastion"
   network                             = google_compute_network.vpc_network.self_link
   peer_network                        = google_compute_network.vpc_network_bastion[0].self_link
@@ -27,6 +28,7 @@ resource "google_compute_network_peering" "peering_osd_to_bastion" {
 }
 
 resource "google_compute_network_peering" "peering_bastion_to_osd" {
+  count                               = var.osd_gcp_private ? 1 : 0
   name                                = "${var.clustername}-peering-bastion-to-bastion"
   network                             = google_compute_network.vpc_network_bastion[0].self_link
   peer_network                        = google_compute_network.vpc_network.self_link

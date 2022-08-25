@@ -1,13 +1,13 @@
 output "bastion_vm_name" {
-  value = google_compute_instance.bastion[0].name
+  value = var.osd_gcp_private ? google_compute_instance.bastion[0].name : null
 }
 
 output "bastion_ip_external" {
-  value = google_compute_instance.bastion[0].network_interface.0.access_config.0.nat_ip
+  value = var.osd_gcp_private ? google_compute_instance.bastion[0].network_interface.0.access_config.0.nat_ip : null
 }
 
 output "bastion_ip_internal" {
-  value = google_compute_instance.bastion[0].network_interface.0.network_ip
+  value = var.osd_gcp_private ? google_compute_instance.bastion[0].network_interface.0.network_ip : null
 }
 
 output "vpc_name" {
