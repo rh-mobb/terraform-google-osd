@@ -28,7 +28,6 @@ cp -pr terraform.tfvars.example terraform.tfvars
 
 * Deploy everything using terraform and osd:
 
-
 Ensure you have the following installed:
 * `osd` binary
 * `jq`

@@ -10,9 +10,9 @@ worker_cidr_block = "10.0.128.0/17"
 
 bastion_cidr_block = "10.10.0.0/24"
 
-gcp_region = "us-west1"
+gcp_region = "europe-west4"
 
-gcp_zone = "us-west1-a"
+gcp_zone = "europe-west4-a"
 
 enable_osd_gcp_bastion = false
 
