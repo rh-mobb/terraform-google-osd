@@ -1,9 +1,11 @@
 # Local .terraform directories
 **/.terraform/*
 
+**/.terraform.tfvars
+
 **/.vscode/*
 
-./configuration/tfvars/terraform.tfvars
+configuration/tfvars/terraform.tfvars
 
 # .tfstate files
 *.tfstate

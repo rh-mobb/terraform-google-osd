@@ -26,3 +26,4 @@ osd_gcp_private = false
 
 bastion_machine_type = "e2-small"
 
+only_deploy_infra_no_osd = true

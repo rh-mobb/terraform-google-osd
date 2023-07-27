@@ -86,3 +86,9 @@ variable "gcp_sa_file_loc" {
   default     = "~/.ssh/id_rsa_sa.json"
   description = "Path to private json for OSD on GCP Admin Service Account"
 }
+
+variable "only_deploy_infra_no_osd" {
+  description = "If set to true, only the networking infra will be deployed, not the OSD in GCP cluster"
+  type        = bool
+  default     = false
+}

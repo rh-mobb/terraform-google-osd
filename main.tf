@@ -16,6 +16,8 @@ provider "google" {
 }
 
 resource "shell_script" "cluster_install" {
+  count = var.only_deploy_infra_no_osd ? 0 : 1
+
   # As currently we do not have a osdongcp_redhatopenshift_cluster style resource, this handles
   # the installation of the cluster after terraform has finished. Improvement for the future!
 
