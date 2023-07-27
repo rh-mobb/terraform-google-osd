@@ -1,6 +1,6 @@
 gcp_project = "mobb-demo"
 
-clustername = "mobb-osd"
+clustername = "emea-osd-gcp"
 
 vpc_routing_mode = "REGIONAL"
 
@@ -13,6 +13,12 @@ bastion_cidr_block = "10.10.0.0/24"
 gcp_region = "us-west1"
 
 gcp_zone = "us-west1-a"
+
+gcp_azs = [
+  "us-west-1a",
+  "us-west-1b",
+  "us-west-1c"
+]
 
 enable_osd_gcp_bastion = false
 

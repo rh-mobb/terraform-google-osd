@@ -1,6 +1,7 @@
 
 # create ssh bastion firewall rules 
 resource "google_compute_firewall" "bastion-fw-rules" {
+  count   = var.enable_osd_gcp_bastion ? 1 : 0
   name    = "${var.clustername}-fw-allow-bastion"
   network = google_compute_network.vpc_network.id
 

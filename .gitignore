@@ -3,6 +3,8 @@
 
 **/.vscode/*
 
+./configuration/tfvars/terraform.tfvars
+
 # .tfstate files
 *.tfstate
 *.tfstate.*
