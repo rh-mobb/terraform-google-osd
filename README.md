@@ -5,7 +5,7 @@ Automation Code for deploy and manage OpenShift Dedicated in GCP in Pre-Existing
 ### Useful notes before you start
 
 * Follow the guide [here](https://docs.openshift.com/dedicated/osd_install_access_delete_cluster/creating-a-gcp-cluster.html#osd-create-gcp-cluster-ccs_osd-creating-a-cluster-on-gcp) to set up your GCP service account
-* Export the location of your json file using: `export GOOGLE_APPLICATION_CREDENTIALS=$PATH_TO_JSON_FILE`
+* Export the location of your json file using: `export TF_VAR_gcp_sa_file_loc=$PATH_TO_JSON_FILE`
 
 
 * Note: if your ssh key is not `~/.ssh/id_rsa.pub`, set this using:
@@ -26,18 +26,18 @@ cp -pr terraform.tfvars.example terraform.tfvars
 
 ## OSD in GCP building everything from scratch (automation yay!)
 
-* Deploy everything using terraform and osd:
+* Deploy everything using terraform and ocm:
 
 Ensure you have the following installed:
-* `osd` binary
+* `ocm` binary, logged in
 * `jq`
-* `gcloud` binary
+* `gcloud` binary, logged in
 
 * Ensure you have the following exported:
 
 ```bash
 export TF_VAR_clustername=$YOUR_CLUSTER_NAME
-export GCP_SA_FILE=$PATH_TO_YOUR_SA_JSON
+export TF_VAR_gcp_sa_file_loc=$PATH_TO_YOUR_SA_JSON
 ````
 
 Then:
