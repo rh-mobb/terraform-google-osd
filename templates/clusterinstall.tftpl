@@ -8,7 +8,7 @@ ocm > /dev/null 2>&1 || echo "Please ensure ocm is installed"
 jq > /dev/null 2>&1 || echo "Please ensure jq is installed"
 
 # Check for OCM connectivity
-ocm get /api/clusters_mgmt/v1/clusters --parameter search="name like '${cluster_name}%'" | jq -re '.items[].name' && {echo 'Cluster seems to exist... please clean it up first or select a new name.'; exit 1; }
+ocm get /api/clusters_mgmt/v1/clusters --parameter search="name like '${cluster_name}%'" | jq -re '.items[].name' && (echo 'Cluster seems to exist... please clean it up first or select a new name.'; exit 1; )
 
 # Check if the GCP SA is valid
 ## Get private key ID
