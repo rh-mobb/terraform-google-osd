@@ -25,12 +25,14 @@ resource "shell_script" "cluster_install" {
     create = templatefile(
       "${path.module}/templates/clusterinstall.tftpl",
       {
-        cluster_name         = var.clustername
-        vpc_name             = google_compute_network.vpc_network.name
-        control_plane_subnet = google_compute_subnetwork.vpc_subnetwork_masters.name
-        compute_subnet       = google_compute_subnetwork.vpc_subnetwork_workers.name
-        gcp_region           = var.gcp_region
-        gcp_sa_file_loc      = var.gcp_sa_file_loc
+        cluster_name            = var.clustername
+        vpc_name                = google_compute_network.vpc_network.name
+        control_plane_subnet    = google_compute_subnetwork.vpc_subnetwork_masters.name
+        compute_subnet          = google_compute_subnetwork.vpc_subnetwork_workers.name
+        gcp_region              = var.gcp_region
+        gcp_sa_file_loc         = var.gcp_sa_file_loc
+        gcp_authentication_type = var.gcp_authentication_type
+        wif_config_name         = "${var.clustername}-wif"
     })
     delete = templatefile(
       "${path.module}/templates/clusterdestroy.tftpl",

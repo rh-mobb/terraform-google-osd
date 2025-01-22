@@ -10,18 +10,27 @@ jq > /dev/null 2>&1 || echo "Please ensure jq is installed"
 # Check for OCM connectivity
 ocm get /api/clusters_mgmt/v1/clusters --parameter search="name like '${cluster_name}%'" | jq -re '.items[].name' && (echo 'Cluster seems to exist... please clean it up first or select a new name.'; exit 1; )
 
-# Check if the GCP SA is valid
-## Get private key ID
-export PRIV_KEY_ID=$(cat ${gcp_sa_file_loc} | jq -r '.private_key_id')
-curl -s $(cat ${gcp_sa_file_loc} | jq -r '.client_x509_cert_url') | jq -re --arg PRIV_KEY_ID "$PRIV_KEY_ID" '.[$PRIV_KEY_ID]' || echo 'Your service account specified at ${gcp_sa_file_loc} seems to be invalid or expired. Please check and try again'
+if [[ '${gcp_authentication_type}' == 'service_account' ]]; then
+  # Check if the GCP SA is valid
+  ## Get private key ID
+  export PRIV_KEY_ID=$(cat ${gcp_sa_file_loc} | jq -r '.private_key_id')
+  curl -s $(cat ${gcp_sa_file_loc} | jq -r '.client_x509_cert_url') | jq -re --arg PRIV_KEY_ID "$PRIV_KEY_ID" '.[$PRIV_KEY_ID]' || echo 'Your service account specified at ${gcp_sa_file_loc} seems to be invalid or expired. Please check and try again'
+
+  authentication_param_name='--service-account-file'
+  authentication_param_value='${gcp_sa_file_loc}'
+else # workload identity federation
+  authentication_param_name='--wif-config'
+  authentication_param_value='${wif_config_name}'
+fi
 
 # Create the cluster
+echo "Creating cluster with $authentication_param_name $authentication_param_value"
 ocm create cluster ${cluster_name} --provider gcp \
                 --debug \
                 --vpc-name ${vpc_name} \
                 --region ${gcp_region} \
                 --control-plane-subnet ${control_plane_subnet} \
                 --compute-subnet ${compute_subnet} \
-                --service-account-file ${gcp_sa_file_loc} \
+                "$authentication_param_name" "$authentication_param_value" \
                 --ccs
 
