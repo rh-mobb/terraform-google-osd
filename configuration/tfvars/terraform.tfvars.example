@@ -16,3 +16,5 @@ gcp_azs = [
 ]
 
 gcp_region = "us-west1"
+
+gcp_authentication_type = "workload_identity_federation"

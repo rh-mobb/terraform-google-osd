@@ -45,6 +45,33 @@ resource "shell_script" "cluster_install" {
   }
 
   depends_on = [
-    google_compute_router_nat.nat-master
+    google_compute_router_nat.nat-master,
+    shell_script.wif_create
   ]
+}
+
+resource "shell_script" "wif_create" {
+  count = var.gcp_authentication_type == "workload_identity_federation" ? 1 : 0
+
+  lifecycle_commands {
+    create = templatefile(
+      "${path.module}/templates/wifcreate.tftpl",
+      {
+        wif_config_name = "${var.clustername}-wif"
+        gcp_project     = var.gcp_project
+      }
+    )
+    delete = templatefile(
+      "${path.module}/templates/wifdelete.tftpl",
+      {
+        wif_config_name = "${var.clustername}-wif"
+      }
+    )
+    read = templatefile(
+      "${path.module}/templates/wifread.tftpl",
+      {
+        wif_config_name = "${var.clustername}-wif"
+      }
+    )
+  }
 }
