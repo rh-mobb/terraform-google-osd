@@ -23,8 +23,13 @@ else # workload identity federation
   authentication_param_value='${wif_config_name}'
 fi
 
+if [[ '${osd_gcp_private}' == 'true' ]]; then
+  private_flag='--private'
+else
+  private_flag=''
+fi
+
 # Create the cluster
-echo "Creating cluster with $authentication_param_name $authentication_param_value"
 ocm create cluster ${cluster_name} --provider gcp \
                 --debug \
                 --vpc-name ${vpc_name} \
@@ -32,5 +37,5 @@ ocm create cluster ${cluster_name} --provider gcp \
                 --control-plane-subnet ${control_plane_subnet} \
                 --compute-subnet ${compute_subnet} \
                 "$authentication_param_name" "$authentication_param_value" \
+                $private_flag \
                 --ccs
-

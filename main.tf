@@ -33,6 +33,7 @@ resource "shell_script" "cluster_install" {
         gcp_sa_file_loc         = var.gcp_sa_file_loc
         gcp_authentication_type = var.gcp_authentication_type
         wif_config_name         = "${var.clustername}-wif"
+        osd_gcp_private         = var.osd_gcp_private
     })
     delete = templatefile(
       "${path.module}/templates/clusterdestroy.tftpl",
