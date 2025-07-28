@@ -32,7 +32,7 @@ Pick one of two options for the installer and cluster to access GCP resources in
 * Copy and modify the tfvars file in order to custom to your scenario
 
 ```bash
-cp -pr terraform.tfvars.example terraform.tfvars
+cp -pr configuration/tfvars/terraform.tfvars.example configuration/tfvars/terraform.tfvars
 ```
 
 ## OSD in GCP building everything from scratch (automation yay!)
@@ -40,7 +40,7 @@ cp -pr terraform.tfvars.example terraform.tfvars
 * Deploy everything using terraform and ocm:
 
 Ensure you have the following installed:
-* `ocm` binary, logged in
+* `ocm` binary, at least version 1.0.3, logged in
 * `jq`
 * `gcloud` binary, logged in
 
