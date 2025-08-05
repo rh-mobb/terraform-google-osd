@@ -92,3 +92,13 @@ variable "only_deploy_infra_no_osd" {
   type        = bool
   default     = false
 }
+
+variable "gcp_authentication_type" {
+  description = "How the installer and cluster should authenticate with GCP. Either 'service_account' or 'workload_identity_federation'"
+  type        = string
+  default     = "service_account"
+  validation {
+    condition     = contains(["service_account", "workload_identity_federation"], var.gcp_authentication_type)
+    error_message = "Valid values for gcp_authentication_type are either 'service_account' or workload_identity_federation'."
+  }
+}

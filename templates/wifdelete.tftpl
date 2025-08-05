@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -x
+
+# Check for OCM installation
+ocm > /dev/null 2>&1 || echo "Please ensure ocm is installed"
+
+# Consider it a success and don't attempt to delete if wif-config already does not exist.
+# This handles the case where the wif config changes or is deleted outside of Terraform
+# and Terraform wants to delete and recreate it, because it detects a change.
+ocm gcp describe wif-config ${wif_config_name} || exit 0
+
+ocm gcp delete wif-config ${wif_config_name}
