@@ -34,3 +34,29 @@ output "bastion_ip_external" {
 output "bastion_ip_internal" {
   value = var.enable_osd_gcp_bastion ? google_compute_instance.bastion[0].network_interface[0].network_ip : null
 }
+
+# Cluster access (requires OCM cluster to exist; run 'terraform refresh' if empty after first apply)
+data "external" "cluster_info" {
+  count = var.only_deploy_infra_no_osd ? 0 : 1
+  program = ["bash", "${path.module}/scripts/get-cluster-urls.sh"]
+  query = {
+    cluster_name = var.clustername
+  }
+  depends_on = [shell_script.cluster_install]
+}
+
+output "cluster_api_url" {
+  description = "OpenShift API URL for the cluster"
+  value       = var.only_deploy_infra_no_osd ? null : data.external.cluster_info[0].result.api_url
+}
+
+output "cluster_console_url" {
+  description = "OpenShift web console URL"
+  value       = var.only_deploy_infra_no_osd ? null : data.external.cluster_info[0].result.console_url
+}
+
+output "cluster_admin_password" {
+  description = "Admin user password (htpasswd)"
+  value       = var.only_deploy_infra_no_osd ? null : var.osd_admin_password
+  sensitive   = true
+}

@@ -4,7 +4,11 @@
 **/.terraform.tfvars
 
 **/.vscode/*
+**/.history/*
 
+# Terraform variable files - may contain secrets, project IDs; do not publish
+*.tfvars
+*.tfvars.old
 configuration/tfvars/terraform.tfvars
 
 # .tfstate files

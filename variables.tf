@@ -21,7 +21,12 @@ variable "vpc_routing_mode" {
 variable "clustername" {
   type        = string
   description = "The name of the cluster."
+}
 
+variable "osd_version" {
+  type        = string
+  description = "OpenShift version for the OSD cluster (e.g. 4.21.3)."
+  default     = "4.21.3"
 }
 
 variable "master_cidr_block" {
@@ -127,4 +132,17 @@ variable "enable_psc_endpoints" {
     "container.googleapis.com",
     "compute.googleapis.com"
   ]
+}
+
+variable "compute_machine_type" {
+  description = "GCP machine type for the default worker machine pool. Empty = OCM default (n2-standard-4). When enable_openshift_virt is true and this is unset, defaults to c3-standard-192-metal for Hyperdisk + KVM support."
+  type        = string
+  default     = ""
+}
+
+variable "osd_admin_password" {
+  description = "Password for htpasswd 'admin' user. Used by create-htpasswd-admin.sh script."
+  type        = string
+  default     = "Passw0rd12345!"
+  sensitive   = true
 }

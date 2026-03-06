@@ -1,0 +1,39 @@
+# Example: OSD on GCP with OpenShift Virtualization (Hyperdisk Balanced for VM disks)
+#
+# Copy to terraform.tfvars and customize:
+#   cp configuration/tfvars/terraform.tfvars.openshift-virt.example configuration/tfvars/terraform.tfvars
+#
+# OpenShift Virtualization requires C3 metal workers (default when enable_openshift_virt = true).
+# Hyperdisk pool must be in the same zone as workers.
+
+gcp_project = "PROJECT-NAME-HERE"   # e.g. mobb-demo
+clustername = "CLUSTER-NAME-HERE"    # e.g. osd-virt-demo
+vpc_routing_mode = "REGIONAL"
+master_cidr_block = "10.0.0.0/19"
+worker_cidr_block = "10.0.32.0/19"
+bastion_cidr_block = "10.10.0.0/24"
+gcp_region = "us-west1"
+gcp_zone = "us-west1-a"              # Hyperdisk pool is zonal; workers use same zone
+gcp_authentication_type = "workload_identity_federation"
+only_deploy_infra_no_osd = false
+
+# OpenShift Virtualization - enables C3 metal workers, Hyperdisk pool, operator + StorageClass
+enable_openshift_virt = true
+
+# Hyperdisk Balanced pool (GCP minimum 10 TiB)
+hyperdisk_pool_capacity_gb = 10240
+hyperdisk_pool_iops = 10000
+hyperdisk_pool_throughput_mbps = 1024
+
+# Optional: override compute machine type (when enable_openshift_virt=true, defaults to c3-standard-192-metal)
+# compute_machine_type = "c3-standard-192-metal"
+
+# Optional: for private cluster, add:
+# osd_gcp_private = true
+# enable_osd_gcp_bastion = true
+# psc_subnet_cidr_block = "10.0.64.0/29"
+# osd_gcp_psc = true
+# enable_psc_endpoints = ["storage.googleapis.com", "container.googleapis.com", "compute.googleapis.com", "logging.googleapis.com", "monitoring.googleapis.com"]
+
+# bastion_key_loc = "~/.ssh/id_rsa.pub"
+# osd_admin_password = "Passw0rd12345!"

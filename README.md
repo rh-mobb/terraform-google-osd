@@ -25,45 +25,162 @@ Pick one of two options for the installer and cluster to access GCP resources in
 1. Set the `gcp_authentication_type` Terraform variable using `export TF_VAR_gcp_authentication_type=service_account`.
 1. Optionally, if you have configured a bastion, and your ssh key is not `~/.ssh/id_rsa.pub`, set its location using ` export TF_VAR_bastion_key_loc=$PATH_TO_PUBLIC_KEY`
 
-## OSD in GCP in Pre-Existing VPCs / Subnets (ideally use the terraform below)
+## Deploying GCP OSD – Detailed Instructions
 
-<img align="center" width="750" src="assets/osd-prereqs.png">
+This section walks through end-to-end deployment of OpenShift Dedicated (OSD) on GCP using this Terraform automation.
 
-* Copy and modify the tfvars file in order to custom to your scenario
+### Prerequisites
+
+Install and configure:
+
+| Tool | Version / Notes |
+|------|-----------------|
+| `ocm` | At least 1.0.3, logged in (`ocm login`) |
+| `oc` | OpenShift CLI for cluster access |
+| `jq` | For JSON processing in scripts |
+| `gcloud` | Logged in (`gcloud auth login`) and project set |
+
+### Step 1: Choose Authentication
+
+Select either **Workload Identity Federation (WIF)** or **Service Account** and follow the corresponding setup (see [Authentication](#authentication) above).
+
+### Step 2: Prepare Configuration
+
+Copy the example tfvars and customize for your environment:
 
 ```bash
-cp -pr configuration/tfvars/terraform.tfvars.example configuration/tfvars/terraform.tfvars
+# For standard deployment (public or private without PSC)
+cp configuration/tfvars/terraform.tfvars.example configuration/tfvars/terraform.tfvars
+
+# For PSC-enabled private clusters (OpenShift 4.17+)
+cp configuration/tfvars/terraform.tfvars.psc.example configuration/tfvars/terraform.tfvars
+
+# For OpenShift Virtualization (VMs with Hyperdisk storage)
+cp configuration/tfvars/terraform.tfvars.openshift-virt.example configuration/tfvars/terraform.tfvars
 ```
 
-## OSD in GCP building everything from scratch (automation yay!)
+Edit `configuration/tfvars/terraform.tfvars` and set at minimum:
 
-* Deploy everything using terraform and ocm:
+- `gcp_project` – your GCP project ID
+- `clustername` – unique cluster name (used in OCM and resource naming)
+- `gcp_region` and `gcp_zone` – target region/zone
+- `gcp_authentication_type` – `"workload_identity_federation"` or `"service_account"`
 
-Ensure you have the following installed:
-* `ocm` binary, at least version 1.0.3, logged in
-* `jq`
-* `gcloud` binary, logged in
+For **WIF**: ensure WIF prerequisites are done. No `gcp_sa_file_loc` needed.
 
-* Ensure you have the following exported:
+For **Service Account**: export the path to your service account JSON:
+
+```bash
+export TF_VAR_gcp_sa_file_loc=$PATH_TO_YOUR_SA_JSON
+```
+
+For **private clusters**: set in terraform.tfvars:
+
+```hcl
+osd_gcp_private = true
+enable_osd_gcp_bastion = true
+```
+
+For **PSC-enabled clusters**: set `osd_gcp_psc = true` and use CIDRs that meet PSC requirements (see [PSC section](#osd-in-gcp-with-private-service-connect-psc) below).
+
+### Step 3: Export Required Variables
 
 ```bash
 export TF_VAR_clustername=$YOUR_CLUSTER_NAME
-export TF_VAR_gcp_sa_file_loc=$PATH_TO_YOUR_SA_JSON
-````
+# If using Service Account:
+# export TF_VAR_gcp_sa_file_loc=$PATH_TO_YOUR_SA_JSON
 
-Then:
+# Optional: non-default SSH key for bastion
+# export TF_VAR_bastion_key_loc=~/.ssh/your_key.pub
+```
+
+### Step 4: Deploy
 
 ```bash
 make all
 ```
 
 This will:
-1. Build your VPCs based on the config  in configuration/tfvars
-2. Connect to your ocm console and create a new cluster using the variables from terraform
 
-You should then be good to go!
+1. Initialize Terraform with the configured backend
+2. Plan infrastructure changes
+3. Apply and create:
+   - VPC, subnets, firewall rules (and PSC resources if enabled)
+   - WIF configuration (if using WIF)
+   - OSD cluster via OCM
+   - Bastion host (if private cluster)
+4. Create htpasswd admin user and perform `oc login` (for follow-on automation)
 
-## Or if you want to do it manually:
+Cluster creation typically takes **30–45 minutes**. Monitor progress in OCM or via `oc get nodes`.
+
+### Step 5: Verify Deployment
+
+Once the cluster is ready:
+
+```bash
+# Log in (if not already)
+oc login https://api.${CLUSTERNAME}.<domain>.openshiftapps.com:6443 \
+  --username=admin --password=<osd_admin_password> --insecure-skip-tls-verify=true
+
+# Check nodes
+oc get nodes
+
+# Confirm cluster version
+oc get clusterversion
+```
+
+For **private clusters**, use the bastion to reach the API (see [Accessing the PSC Private Cluster](#accessing-the-psc-private-cluster) for the flow).
+
+### Step 6: Destroy (Cleanup)
+
+To destroy the cluster and all infrastructure (VPCs, subnets, WIF, bastion, Hyperdisk pool, etc.):
+
+**Prerequisites:**
+
+- `ocm` CLI logged in
+- `terraform.tfvars` (or `TF_VAR_clustername`) must use the same `clustername` that was used to create the cluster
+
+**Destroy everything:**
+
+```bash
+export TF_VAR_clustername=$YOUR_CLUSTER_NAME
+make destroy
+```
+
+This will:
+
+1. Delete the OSD cluster via OCM (waits for cluster removal, up to 60 minutes)
+2. Destroy Terraform-managed resources: VPCs, subnets, firewall rules, WIF config, bastion, Hyperdisk pool (if any)
+
+**Manual alternative** (if you prefer to review the destroy plan first):
+
+```bash
+export ENVIRONMENT="lab"
+export TF_BACKEND_CONF="configuration/backend"
+export TF_VARIABLES="configuration/tfvars"
+export TF_VAR_clustername=$YOUR_CLUSTER_NAME
+
+terraform init -backend-config="$TF_BACKEND_CONF/$ENVIRONMENT.conf"
+terraform destroy -var-file="$TF_VARIABLES/terraform.tfvars"
+```
+
+**Note:** `make destroy` also removes `.terraform`, plan files, and state directories. Run `make init` before deploying again.
+
+---
+
+## OSD in GCP in Pre-Existing VPCs / Subnets
+
+<img align="center" width="750" src="assets/osd-prereqs.png">
+
+If you already have VPCs and subnets, copy and modify the tfvars to match your environment:
+
+```bash
+cp -pr configuration/tfvars/terraform.tfvars.example configuration/tfvars/terraform.tfvars
+```
+
+Configure `master_cidr_block`, `worker_cidr_block`, VPC names, etc. to align with your existing network, then run `make all` or the manual Terraform steps below.
+
+## Manual Terraform Commands (alternative to `make all`)
 
 ```bash
 export ENVIRONMENT="lab"
@@ -76,7 +193,7 @@ terraform plan -var-file="$TF_VARIABLES/terraform.tfvars" -out "output/tf.$ENVIR
 terraform apply output/tf.$ENVIRONMENT.plan
 ```
 
-* Then follow the [OSD in GCP install link](https://docs.openshift.com/dedicated/osd_install_access_delete_cluster/creating-a-gcp-cluster.html#osd-create-gcp-cluster-ccs_osd-creating-a-cluster-on-gcp)
+Then follow the [OSD in GCP install link](https://docs.openshift.com/dedicated/osd_install_access_delete_cluster/creating-a-gcp-cluster.html#osd-create-gcp-cluster-ccs_osd-creating-a-cluster-on-gcp)
 
 ## OSD in GCP in Private Mode
 
@@ -111,20 +228,16 @@ terraform apply output/tf.$ENVIRONMENT.plan
 
 * Follow the [OSD in GCP install link](https://docs.openshift.com/dedicated/osd_install_access_delete_cluster/creating-a-gcp-cluster.html#osd-create-gcp-cluster-ccs_osd-creating-a-cluster-on-gcp)
 
-## Auto cleanup
+## Destroy / Cleanup
 
-Export the following:
+See [Step 6: Destroy (Cleanup)](#step-6-destroy-cleanup) in the deployment instructions for full details. In short:
 
 ```bash
 export TF_VAR_clustername=$YOUR_CLUSTER_NAME
-````
-
-Then:
-
-```bash
 make destroy
 ```
 
+---
 
 ## OSD in GCP with Private Service Connect (PSC)
 
@@ -324,6 +437,153 @@ done
 | 403 Forbidden from API | Normal - not authenticated | Configure IdP and login |
 | DNS not resolving | Private DNS configuration | Check /etc/hosts or PSC DNS zones |
 | Cluster name mismatch | Terraform var != OCM cluster name | Ensure `TF_VAR_clustername` matches |
+
+### Scripts
+
+Cluster and WIF lifecycle logic lives in `scripts/` and is invoked by Terraform with environment variables. You can run them manually for debugging:
+
+**Cluster create** (requires env vars from terraform.tfvars):
+```bash
+export CLUSTER_NAME=pczarkow
+export VPC_NAME=pczarkow-vpc
+export CONTROL_PLANE_SUBNET=pczarkow-master-subnet
+export COMPUTE_SUBNET=pczarkow-worker-subnet
+export GCP_REGION=us-west1
+export GCP_ZONE=us-west1-a
+export GCP_PROJECT=mobb-demo
+export WIF_CONFIG_NAME=pczarkow-wif
+# ... and other vars - see templates/clusterinstall_invoke.tftpl
+./scripts/clusterinstall.sh
+```
+
+**WIF create**:
+```bash
+export WIF_CONFIG_NAME=pczarkow-wif
+export GCP_PROJECT=mobb-demo
+./scripts/wifcreate.sh
+```
+
+**Cluster destroy**:
+```bash
+export CLUSTER_NAME=pczarkow
+./scripts/clusterdestroy.sh
+```
+
+**Post-cluster automation** (Terraform runs these automatically after cluster creation):
+1. **htpasswd admin user** – Creates htpasswd IDP with user `admin`, adds to cluster-admins group
+2. **oc login** – Logs in as admin (waits for API, retries up to 10 min)
+3. **If `enable_openshift_virt = true`** – Installs OpenShift Virtualization operator + HyperConverged CR, then creates Hyperdisk StorageClass
+
+### Enabling OpenShift Virtualization and Testing VMs
+
+OpenShift Virtualization allows you to run VMs on your OSD cluster. By default, `enable_openshift_virt` is **off** (or commented out) in `terraform.tfvars`. To enable it:
+
+#### 1. Enable in terraform.tfvars
+
+**Option A: Use the dedicated example** (recommended for fresh deployments):
+
+```bash
+cp configuration/tfvars/terraform.tfvars.openshift-virt.example configuration/tfvars/terraform.tfvars
+# Edit and set gcp_project, clustername, etc.
+```
+
+**Option B: Edit existing terraform.tfvars** – uncomment and add:
+
+```hcl
+enable_openshift_virt = true
+
+# Optional: tune Hyperdisk pool (defaults shown)
+# hyperdisk_pool_capacity_gb = 10240   # min 10240 (10 TiB) per GCP
+# hyperdisk_pool_iops = 10000
+# hyperdisk_pool_throughput_mbps = 1024
+```
+
+**Important**: When `enable_openshift_virt = true`, Terraform automatically uses **C3 metal** workers (`c3-standard-192-metal`) for KVM and Hyperdisk compatibility. If you prefer a different machine type, set `compute_machine_type` explicitly.
+
+#### 2. Deploy (or re-apply)
+
+If the cluster already exists, run:
+
+```bash
+terraform apply -var-file="configuration/tfvars/terraform.tfvars"
+```
+
+If deploying fresh, `make all` will include OpenShift Virtualization setup.
+
+#### 3. What Gets Created
+
+| Component | Description |
+|-----------|-------------|
+| **Hyperdisk Balanced storage pool** | Zonal pool (`${clustername}-virt-pool`) in the same zone as workers. RWX across zones is not supported. |
+| **Hyperdisk StorageClass** | `hyperdisk-virt-sc` – default StorageClass for VM DataVolumes |
+| **OpenShift Virtualization operator** | Installed in `openshift-cnv` namespace |
+| **HyperConverged CR** | `kubevirt-hyperconverged` – enables KubeVirt and CDI |
+
+The operator install and HyperConverged rollout can take **15–25 minutes** after cluster creation.
+
+#### 4. Verify OpenShift Virtualization
+
+```bash
+# Check operator is ready
+oc get csv -n openshift-cnv
+
+# Check HyperConverged status
+oc get hco -n openshift-cnv kubevirt-hyperconverged
+
+# Check StorageClass
+oc get storageclass hyperdisk-virt-sc
+```
+
+#### 5. Test a VM
+
+**Install virtctl** (required for SSH to VMs):
+
+```bash
+# Option A: Download from OpenShift Console
+# Workloads → Virtualization → virtctl (version matches your cluster)
+
+# Option B: Download from KubeVirt releases (match version to your OpenShift Virtualization)
+# For Linux: OS=linux, ARCH=amd64 or arm64
+# For macOS: OS=darwin, ARCH=amd64 or arm64
+VERSION=$(oc get kubevirt.kubevirt.io/kubevirt -n openshift-cnv -o jsonpath='{.status.observedKubeVirtVersion}' 2>/dev/null || echo "v1.3.0")
+curl -L -o virtctl "https://github.com/kubevirt/kubevirt/releases/download/${VERSION}/virtctl-${VERSION}-$(uname -s | tr A-Z a-z)-$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')"
+chmod +x virtctl && sudo mv virtctl /usr/local/bin/
+
+# Option C: kubectl krew
+kubectl krew install virt   # then use: kubectl virt ssh ...
+```
+
+**Run the automated VM test** (creates a CentOS Stream 9 VM, injects SSH key, verifies connectivity):
+
+```bash
+# Ensure you're logged in and KUBECONFIG points to your cluster
+# For private clusters, run this from the bastion (or a host that can reach the API)
+oc login ...
+
+# Quick test – creates VM, runs SSH test, tears down VM
+make test-vm
+
+# Keep VM running and print virtctl ssh command
+make test-keep-vm
+```
+
+For manual testing:
+
+```bash
+./scripts/test-vm-ssh.sh           # run test and cleanup
+./scripts/test-vm-ssh.sh --keep-vm # leave VM running, print virtctl ssh command
+```
+
+The test creates a VM from the `centos-stream9` DataSource (from OpenShift Virtualization golden images), injects an ephemeral SSH key via cloud-init, waits for the guest agent, and verifies SSH via `virtctl ssh`.
+
+#### 6. Troubleshooting
+
+| Issue | Possible cause | Action |
+|-------|----------------|--------|
+| VM stuck in `Scheduling` | No C3 metal nodes or wrong zone | Ensure `enable_openshift_virt = true` and workers use `c3-standard-192-metal` |
+| DataVolume import slow | Golden image download | Wait; first import can take 10–15 min |
+| `virtctl ssh` fails | Guest agent not ready | Wait for `AgentConnected` on VMI, or retry after a few minutes |
+| StorageClass not found | Terraform apply not run | Re-apply with `enable_openshift_virt = true` |
 
 ### Architecture Details
 

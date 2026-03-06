@@ -7,12 +7,12 @@ TF_VARIABLES      := configuration/tfvars
 
 all: init changes deploy
 
-init: 
+init:
 	$(info Initializing Terraform...)
 	$(TERRAFORM) init \
 		-backend-config="$(TF_BACKEND_CONF)/$(ENVIRONMENT).conf" $(TF_FILES_PATH)
 
-changes: 
+changes:
 	$(info Get changes in infrastructure resources...)
 	$(TERRAFORM) plan \
 		-var-file="$(TF_VARIABLES)/terraform.tfvars" \
@@ -39,3 +39,11 @@ clean:
 	$(RM) -r output/tf.$(ENVIRONMENT).plan
 	$(RM) -r state/terraform*
 	$(RM) -r .terraform.lock.hcl
+
+test-vm:
+	$(info Running VM SSH test...)
+	./scripts/test-vm-ssh.sh
+
+test-keep-vm:
+	$(info Creating VM and leaving it running...)
+	./scripts/test-vm-ssh.sh --keep-vm

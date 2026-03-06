@@ -20,5 +20,14 @@ enable_psc_endpoints = [
 ]
 only_deploy_infra_no_osd = false
 
+# OpenShift Virtualization - Hyperdisk Balanced storage pool for VM disks (same zone as C3 nodes)
+# enable_openshift_virt = true
+# hyperdisk_pool_capacity_gb = 1024
+# hyperdisk_pool_iops = 10000
+# hyperdisk_pool_throughput_mbps = 1024
+
+# htpasswd admin user password (for create-htpasswd-admin.sh). Default: Passw0rd12345!
+# osd_admin_password = "Passw0rd12345!"
+
 # add this if your SSH key is not in the default location
 # bastion_key_loc = "~/.ssh/id_rsa.pub"
